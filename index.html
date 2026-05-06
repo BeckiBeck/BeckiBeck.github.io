@@ -783,7 +783,7 @@
     .trip-meta-row {
       display: grid;
       grid-template-columns: minmax(0, 1.35fr) minmax(96px, .75fr) 46px;
-      gap: 8px;
+      gap: 8px 12px;
       align-items: end;
     }
 
@@ -800,6 +800,10 @@
     .trip-meta-row input {
       width: 100%;
       min-width: 0;
+    }
+
+    .trip-meta-row > div:first-child {
+      max-width: 235px;
     }
 
     .trip-meta-row .weather-refresh-btn {
@@ -870,11 +874,12 @@
 
       .trip-meta-row {
         grid-template-columns: minmax(0, 1fr) 42px;
-        gap: 8px;
+        gap: 8px 16px;
       }
 
       .trip-meta-row > div:first-child {
         grid-column: 1 / 2;
+        max-width: min(225px, 100%);
       }
 
       .trip-meta-row > div:nth-child(2) {
@@ -1045,7 +1050,7 @@
           </div>
           <div>
             <label for="temp">Temperatur °C</label>
-            <input id="temp" type="number" inputmode="decimal" value="20" step="1" />
+            <input id="temp" type="text" inputmode="text" value="20" placeholder="z.B. -5" autocomplete="off" />
           </div>
           <button id="weatherRefreshBtn" class="weather-refresh-btn" type="button" title="Wetter von Meteoblue laden" aria-label="Wetter von Meteoblue laden">↻</button>
         </div>
@@ -1561,6 +1566,18 @@
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function parseTemperatureInput(fallback = 20) {
+      const raw = String($("temp")?.value ?? "").trim();
+      if (!raw) return fallback;
+
+      const normalized = raw
+        .replace(/[−–—]/g, "-")
+        .replace(",", ".");
+
+      const value = Number(normalized);
+      return Number.isFinite(value) ? value : fallback;
     }
 
     const SERVICE_CONSENT_VERSION = 1;
@@ -3103,7 +3120,7 @@
         await sleep(80);
         setProgress(94);
         setStatus(elevation.ascent || elevation.descent ? "Berechne Verbrauch inkl. Steigung und Rekuperation …" : "Berechne Verbrauch ohne Höhendaten …");
-        const tempC = Number($("temp").value || 20);
+        const tempC = parseTemperatureInput(20);
         const durationInfo = computeSpeedModel(route);
         const durationForModel = durationInfo.seconds;
         logDebug(
